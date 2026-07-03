@@ -102,21 +102,28 @@ require("lazy").setup({
     },
 
     -- ── File Explorer ─────────────────────────────────────────
-    {
-      "nvim-tree/nvim-tree.lua",
-      dependencies = "nvim-tree/nvim-web-devicons",
-      opts = {
-        view = { width = 35 },
-        renderer = {
-          group_empty   = true,
-          highlight_git = true,
-          icons = { show = { git = true } },
-        },
-        filters = { dotfiles = false },
-        git     = { enable = true },
-        actions = { open_file = { quit_on_open = false } },
+{
+  "nvim-tree/nvim-tree.lua",
+  dependencies = "nvim-tree/nvim-web-devicons",
+  config = function()
+    require("nvim-tree").setup({
+      view = { width = 35 },
+      renderer = {
+        group_empty   = true,
+        highlight_git = true,
+        icons = { show = { git = true } },
       },
-    },
+      filters = { dotfiles = false },
+      git     = { enable = true },
+      actions = { open_file = { quit_on_open = false } },
+      on_attach = function(bufnr)
+        local api = require("nvim-tree.api")
+        -- load all default mappings first
+        api.config.mappings.default_on_attach(bufnr)
+      end,
+    })
+  end,
+},
 
     -- ── Git signs ─────────────────────────────────────────────
     {
@@ -410,3 +417,21 @@ map("n", "<Esc>", ":nohlsearch<CR>", "Clear search highlight")
 -- Quick save / quit
 map("n", "<leader>w", ":w<CR>", "Save file")
 map("n", "<leader>q", ":q<CR>", "Quit")
+
+-- Create global .clang-format
+map("n", "<leader>cf", function()
+  local config = [[BasedOnStyle: LLVM
+IndentWidth: 4
+UseTab: Always
+TabWidth: 4
+]]
+  local path = vim.fn.expand("~/.clang-format")
+  local f = io.open(path, "w")
+  if f then
+    f:write(config)
+    f:close()
+    vim.notify("Created ~/.clang-format", vim.log.levels.INFO)
+  else
+    vim.notify("Failed to create ~/.clang-format", vim.log.levels.ERROR)
+  end
+end, "Create global .clang-format")
